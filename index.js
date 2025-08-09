@@ -23,8 +23,8 @@ app.use('/api', authRoutes);
 /* ── Serve React frontend ───────────────────── */
 app.use(express.static(path.join(__dirname, 'client', 'build')));
 
-// Catch-all handler: send index.html for any route not starting with /api
-app.get('/*', (req, res) => {
+
+app.get(/^\/(?!api).*/, (req, res) => {
   res.sendFile(path.join(__dirname, 'client', 'build', 'index.html'));
 });
 
