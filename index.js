@@ -6,7 +6,7 @@ const path     = require('path');
 const authRoutes = require('./routes/userRoutes.js');
 
 const app  = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 const uri  = process.env.MONGO_URI;
 
 /* ── middleware ─────────────────────────────── */
@@ -19,6 +19,14 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 /* ── routes ─────────────────────────────────── */
 app.use('/api', authRoutes);
+
+/* ── Serve React frontend ───────────────────── */
+app.use(express.static(path.join(__dirname, 'client', 'build')));
+
+// Catch-all handler: send index.html for any route not starting with /api
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'client', 'build', 'index.html'));
+});
 
 /* ── start ──────────────────────────────────── */
 mongoose.connect(uri)
