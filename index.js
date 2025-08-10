@@ -18,15 +18,14 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 /* ── routes ─────────────────────────────────── */
+
 app.use('/api', authRoutes);
 
 /* ── Serve React frontend ───────────────────── */
 app.use(express.static(path.join(__dirname, 'client', 'build')));
 
 
-app.get(/^\/(?!api).*/, (req, res) => {
-  res.sendFile(path.join(__dirname, 'client', 'build', 'index.html'));
-});
+
 
 /* ── start ──────────────────────────────────── */
 mongoose.connect(uri)
