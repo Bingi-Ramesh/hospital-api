@@ -8,13 +8,13 @@ require('dotenv').config();
 // Patient Signup
 async function signUpPatient(req, res) {
   try {
-    const { fullname, age, email, password } = req.body;
+    const { fullname, age, email, password,mobile } = req.body;
 
     const existing = await Patient.findOne({ email });
     if (existing) return res.status(409).json({ message: 'Patient already exists' });
 
     const hashed = await bcrypt.hash(password, 10);
-    const patient = new Patient({ fullname, age, email, password: hashed });
+    const patient = new Patient({ fullname, age, email, password: hashed ,mobile});
 
     await patient.save();
     res.status(201).json({ message: 'Patient registered', id: patient._id });
@@ -73,9 +73,9 @@ async function updatePatientProfileImg(req, res) {
 
 
 
-const patientForgotPassword = async (req, res) => {
+const forgotPassword = async (req, res) => {
   try {
-    const { email,} = req.body;
+    const { email} = req.body;
     
 
    
@@ -85,8 +85,11 @@ const patientForgotPassword = async (req, res) => {
 
     // Check if student with the email already exists
     const existingPatient = await Patient.findOne({ email });
-    if (!existingPatient) {
-      return res.status(200).json({ error: 'A Patient with this email does not exists!' });
+    const existingDoctor = await Doctor.findOne({ email });
+    const existingReceptionist = await Receptionist.findOne({ email });
+    const existingAdmin = await Admin.findOne({ email });
+    if (!existingPatient && !existingDoctor && !existingReceptionist && !existingAdmin) {
+      return res.status(200).json({ message: 'A user with this email does not exists!' });
     }
 
     // Generate OTP
@@ -96,7 +99,7 @@ const patientForgotPassword = async (req, res) => {
     const mail = createMail();
     mail.setTo(email);
     mail.setSubject('Email verification');
-    mail.setText(`please  verify your details /n Name: ${existingPatient.fullname} and Your OTP to verify your email is ${random6DigitNumber}. Please do not share it with anyone. This OTP is valid for few minutes only you can enter this otp and reset your password.`);
+    mail.setText(` Your OTP to verify your email at Pushpa Hospital is ${random6DigitNumber}. Please do not share it with anyone. This OTP is valid for few minutes only you can enter this otp and reset your password.`);
 
     // Send email and handle possible errors
     try {
@@ -108,7 +111,7 @@ const patientForgotPassword = async (req, res) => {
 
     // If email is sent successfully, respond with success
     res.status(200).json({
-      message: 'OTP sent to the student successfully.',
+      message: 'OTP sent to the user successfully.',
       otp: {
       
         otp: random6DigitNumber, // Returning the OTP in case the client needs it
@@ -123,7 +126,7 @@ const patientForgotPassword = async (req, res) => {
 
 
 
-const updatePatientPassword = async (req, res) => {
+const updatePassword = async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -133,16 +136,39 @@ const updatePatientPassword = async (req, res) => {
 
     // Check if patient exists
     const patient = await Patient.findOne({ email });
-    if (!patient) {
-      return res.status(404).json({ message: "Patient not found" });
+    const doctor = await Doctor.findOne({ email });
+    const receptionist = await Receptionist.findOne({ email });
+    const admin = await Admin.findOne({ email });
+    if (!patient && !doctor && !receptionist && !admin) {
+      return res.status(404).json({ message: "User not found" });
     }
 
-    // Hash the new password
+  
     const hashed = await bcrypt.hash(password, 10);
 
     // Update patient's password
-    patient.password = hashed;
-    await patient.save();
+    if(patient){
+      patient.password = hashed;
+      await patient.save();
+    }
+
+    if(doctor){
+      doctor.password = hashed;
+      await doctor.save();
+    }
+
+    if(receptionist){
+      receptionist.password = hashed;
+      await receptionist.save();
+    }
+
+    if(admin){
+      admin.password = hashed;
+      await admin.save();
+    }
+   
+
+
 
     return res.status(200).json({ message: "Password updated successfully" });
   } catch (error) {
@@ -154,6 +180,6 @@ const updatePatientPassword = async (req, res) => {
 module.exports = {
   signUpPatient,
   updatePatientProfileImg,
-  patientForgotPassword,
-  updatePatientPassword
+  forgotPassword,
+  updatePassword
 };
